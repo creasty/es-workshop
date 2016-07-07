@@ -22,19 +22,85 @@ class UserSearchService < BaseSearchService
   def apply_name_filter(q)
     return if q.empty?
 
-    root.disjunctive_queries << {
-      simple_query_string: {
-        query: q,
-        fields: ['s_name_ja', 's_name_ja_phonetic', 's_name_en']
-      }
-    }
-    Roka.convert(q).each do |romaji|
-      root.disjunctive_queries << {
-        simple_query_string: {
-          query: romaji,
-          fields: ['s_name_ja_phonetic']
+    root.highlight(
+      's_name_*': {}
+    )
+
+    phrases(q).map do |phrase|
+      {
+        simple_query_string: simple_query_string(
+          query:  quote_query(phrase),
+          fields: ['s_name_en', 's_name_ja', 's_name_ja_phonetic']
+        )
+      }.tap do |query|
+        root.disjunctive_queries << query
+        root.func_scores << {
+          filter:       query,
+          boost_factor: NAME_SCORE,
         }
-      }
+      end
+
+      {
+        multi_match: {
+          type:   :phrase_prefix,
+          query:  quote_query(phrase),
+          fields: ['s_name_en', 's_name_ja', 's_name_ja_phonetic']
+        }
+      }.tap do |query|
+        root.disjunctive_queries << query
+        root.func_scores << {
+          filter:       query,
+          boost_factor: NAME_SCORE * 0.6,
+        }
+      end
+
+      {
+        or: [
+          {
+            simple_query_string: simple_query_string(
+              query:  quote_query(phrase),
+              fields: ['s_name_ja_phonetic']
+            )
+          },
+          *Roka.convert(phrase).map { |romaji|
+            {
+              simple_query_string: simple_query_string(
+                query:  quote_query(romaji),
+                fields: ['s_name_ja_phonetic']
+              )
+            }
+          }
+        ]
+      }.tap do |query|
+        root.disjunctive_queries << query
+        root.func_scores << {
+          filter:       query,
+          boost_factor: NAME_SCORE * 0.5
+        }
+      end
+
+      {
+        or: [
+          {
+            match_phrase_prefix: {
+              s_name_ja_phonetic: quote_query(phrase),
+            }
+          },
+          *Roka.convert(phrase).map { |romaji|
+            {
+              match_phrase_prefix: {
+                s_name_ja_phonetic: quote_query(romaji),
+              }
+            }
+          }
+        ]
+      }.tap do |query|
+        root.disjunctive_queries << query
+        root.func_scores << {
+          filter:       query,
+          boost_factor: NAME_SCORE * 0.4,
+        }
+      end
     end
   end
 
