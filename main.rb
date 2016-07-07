@@ -121,15 +121,25 @@ end
 class IssueSearchService < BaseSearchService
 
   def apply_all
+    q_normalized = normalized_query(params[:q])
+
+    apply_title_filter(q_normalized)
   end
 
   def search(body)
     client.post('issue/_search', body).body
   end
 
+  def apply_title_filter(q)
+    return if q.empty?
+
+
+  end
+
 end
 
 issue_ss = IssueSearchService.new(
+  q:      'vim',
   fields: ['*'],
 )
 issue_ss.perform!
