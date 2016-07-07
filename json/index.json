@@ -1,0 +1,215 @@
+{
+  //  Index settings
+  //-----------------------------------------------
+  "settings": {
+    "analysis": {
+      "char_filter": {
+        "symbol_keyword": {
+          // Standard analyzer regards whitespace and punctuation as delimiter.
+          // In order to make `[+#!]` searchable, replace these characters into "keyword" tokens before getting analyzed.
+          // @see https://www.elastic.co/guide/en/elasticsearch/guide/current/analysis-intro.html#_built_in_analyzers
+          // @see https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-mapping-charfilter.html
+          "type": "mapping",
+          "mappings": [
+            "+=>symbolplus",
+            "＋=>symboljpplus",
+            "#=>symbolsharp",
+            "＃=>symboljpsharp",
+            "!=>symbolexclamation",
+            "！=>symboljpexclamation",
+            "?=>symbolquestion",
+            "？=>symboljpquestion"
+          ]
+        }
+      },
+      "filter": {
+        "pos_filter": {
+          // Remove tokens that match with specified part-of-speeches
+          // https://github.com/elastic/elasticsearch-analysis-kuromoji#tokenfilter--kuromoji_part_of_speechg
+          "type": "kuromoji_part_of_speech",
+          "stoptags": [
+            "助詞-格助詞-一般",
+            "助詞-終助詞"
+          ]
+        },
+        "greek_lowercase_filter": {
+          "type": "lowercase",
+          "language": "greek"
+        },
+        "split_delimiter": {
+          "type": "word_delimiter",
+          "generate_word_parts": true,
+          "generate_number_parts": false,
+          "catenate_words": false,
+          "catenate_numbers": false,
+          "catenate_all": false,
+          "split_on_case_change": false,
+          "preserve_original": false,
+          "split_on_numerics": false,
+          "stem_english_possessive": false
+        }
+      },
+      "tokenizer": {
+        "kuromoji": {
+          "type": "kuromoji_tokenizer"
+        },
+        "kuromoji_pserson_dic": {
+          "type": "kuromoji_tokenizer",
+          "user_dictionary": "person.dic"
+        }
+      },
+      "analyzer": {
+        "kuromoji_analyzer": {
+          "type": "custom",
+          "tokenizer": "kuromoji_tokenizer",
+          "filter": [
+            "kuromoji_baseform",
+            "pos_filter",
+            "greek_lowercase_filter",
+            "cjk_width"
+          ],
+          "char_filter": [
+            "symbol_keyword"
+          ]
+        },
+        "yomigana_analyzer": {
+          "type": "custom",
+          "tokenizer": "kuromoji_pserson_dic",
+          "filter": [
+            "kuromoji_readingform",
+            "split_delimiter"
+          ]
+        },
+        "tag_analyzer": {
+          "type": "custom",
+          "tokenizer": "keyword",
+          "filter": [
+            "cjk_width",
+            "greek_lowercase_filter"
+          ]
+        }
+      }
+    }
+  },
+
+  //  Mappings
+  //-----------------------------------------------
+  "mappings": {
+    "comment": {
+      "_all": { "enabled": false },
+      "_source": { "enabled": true },
+      "_parent": { "type": "issue" },
+      "properties": {
+        "i_comment_id": {
+          "type": "integer",
+          "store": true
+        },
+        "i_issue_id": {
+          "type": "integer",
+          "store": true
+        },
+        "i_user_id": {
+          "type": "integer",
+          "store": true
+        },
+        "s_body": {
+          "type": "string",
+          "store": true,
+          "index": "analyzed",
+          "analyzer": "kuromoji_analyzer"
+        },
+        "i_created_at": {
+          "type": "integer",
+          "store": true
+        }
+      }
+    },
+    "issue": {
+      "_all": { "enabled": false },
+      "_source": { "enabled": true },
+      "properties": {
+        "i_issue_id": {
+          "type": "integer",
+          "store": true
+        },
+        "i_user_id": {
+          "type": "integer",
+          "store": true
+        },
+        "s_title": {
+          "type": "string",
+          "store": true,
+          "index": "analyzed",
+          "analyzer": "kuromoji_analyzer"
+        },
+        "s_body": {
+          "type": "string",
+          "store": true,
+          "index": "analyzed",
+          "analyzer": "kuromoji_analyzer"
+        },
+        "i_created_at": {
+          "type": "integer",
+          "store": true
+        }
+      }
+    },
+    "user": {
+      "_all": { "enabled": false },
+      "_source": { "enabled": true },
+      "properties": {
+        "i_user_id": {
+          "type": "integer",
+          "store": true
+        },
+        "s_name_ja": {
+          "type": "string",
+          "store": true,
+          "index": "analyzed",
+          "analyzer": "kuromoji_analyzer"
+        },
+        "s_name_ja_phonetic": {
+          "type": "string",
+          "store": true,
+          "index": "analyzed",
+          "analyzer": "yomigana_analyzer"
+        },
+        "s_name_en": {
+          "type": "string",
+          "store": true,
+          "index": "analyzed",
+          "analyzer": "pattern"
+        },
+        "s_username": {
+          "type": "string",
+          "store": true,
+          "index": "analyzed",
+          "analyzer": "pattern"
+        },
+        "i_involved_count": {
+          "type": "integer",
+          "store": true
+        },
+        "i_wantedly_score": {
+          "type": "integer",
+          "store": true
+        },
+        "n_skill_tags": {
+          "type": "nested",
+          "properties": {
+            "s_tag_name_ja": {
+              "type": "string",
+              "store": true,
+              "index": "analyzed",
+              "analyzer": "tag_analyzer"
+            },
+            "i_endorsement_count": {
+              "type": "integer",
+              "store": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

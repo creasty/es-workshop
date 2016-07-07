@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+set -eu
+set -o pipefail
+
+ROOT_PATH="$(dirname "$0")/.."
+ENV_FILE_PATH="${ROOT_PATH}/.env"
+
+if [ -f "$ENV_FILE_PATH" ]; then
+  set -o allexport
+  eval "$(cat "$ENV_FILE_PATH" | grep -v '^#')"
+  set +o allexport
+else
+  echo "Create .env file!" 1>&2
+  exit 1
+fi
+
+METHOD="${1:-GET}"
+shift
+
+REQ_PATH="$1"
+shift
+
+curl "$ELASTICSEARCH_URL/${INDEX_NAME}${REQ_PATH}" -X "$METHOD" $@
+echo

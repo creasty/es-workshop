@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+set -eu
+set -o pipefail
+
+if ! command -v bundler > /dev/null 2>&1; then
+  cat 1>&2 << EOF
+Please install bundler:
+    http://bundler.io/
+
+    $ gem install bundler
+EOF
+  exit 1
+fi
+
+bundle install --path=vendor/bundle --without=development
+
+if ! command -v jq > /dev/null 2>&1; then
+  cat 1>&2 << EOF
+Please install jq:
+    https://stedolan.github.io/jq/
+
+    $ brew install jq
+EOF
+  exit 1
+fi

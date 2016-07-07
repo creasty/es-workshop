@@ -1,0 +1,22 @@
+# @see https://github.com/elastic/elasticsearch/blob/v2.3.0/distribution/src/main/resources/config/elasticsearch.yml
+
+script.inline: on
+script.indexed: on
+
+indices.query.bool.max_clause_count: 2000
+
+index.mapper.dynamic: false
+
+node.name: ${ES_NODE_NAME}
+node.max_local_storage_nodes: 1
+
+cluster.name: ${ES_CLUSTER_NAME}
+
+action.auto_create_index: true
+action.disable_delete_all_indices: true
+
+bootstrap.mlockall: true
+
+gateway.expected_nodes: 1
+
+plugin.mandatory: analysis-kuromoji
