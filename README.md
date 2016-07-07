@@ -6,11 +6,12 @@ Setup
 
 ```sh
 # Setup environment
-$ cp .env{.sample,}
 $ docker login
 $ make deps
 
 # Setup Elasticsearch
+$ cp .env{.sample,}
+$ vim .env  # set ELASTICSEARCH_URL to a proper endpoint
 $ make start
 $ make index
 ```
