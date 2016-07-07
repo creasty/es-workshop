@@ -130,6 +130,7 @@ class IssueSearchService < BaseSearchService
     q_normalized = normalized_query(params[:q])
 
     apply_title_filter(q_normalized)
+    apply_body_filter(q_normalized)
   end
 
   def search(body)
@@ -155,10 +156,29 @@ class IssueSearchService < BaseSearchService
     end
   end
 
+  def apply_body_filter(q)
+    return if q.empty?
+
+    phrases(q).each do |phrase|
+      {
+        simple_query_string: simple_query_string(
+          query:  phrase,
+          fields: ['s_body']
+        )
+      }.tap do |query|
+        root.disjunctive_queries << query
+        root.func_scores << {
+          filter:       query,
+          boost_factor: BODY_SCORE,
+        }
+      end
+    end
+  end
+
 end
 
 issue_ss = IssueSearchService.new(
-  q:      'vim',
+  q:      'vim templates',
   fields: ['*'],
 )
 issue_ss.perform!
