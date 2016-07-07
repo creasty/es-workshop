@@ -28,13 +28,21 @@ class UserSearchService < BaseSearchService
         fields: ['s_name_ja', 's_name_ja_phonetic', 's_name_en']
       }
     }
+    Roka.convert(q).each do |romaji|
+      root.disjunctive_queries << {
+        simple_query_string: {
+          query: romaji,
+          fields: ['s_name_en']
+        }
+      }
+    end
   end
 
 end
 
 
 user_ss = UserSearchService.new(
-  q: '田中',
+  q: 'mukai',
   fields: ['*'],
 )
 user_ss.perform!
