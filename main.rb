@@ -32,7 +32,7 @@ class UserSearchService < BaseSearchService
       root.disjunctive_queries << {
         simple_query_string: {
           query: romaji,
-          fields: ['s_name_en']
+          fields: ['s_name_ja_phonetic']
         }
       }
     end
