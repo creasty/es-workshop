@@ -120,6 +120,12 @@ end
 
 class IssueSearchService < BaseSearchService
 
+  TITLE_SCORE        = 150
+  BODY_SCORE         = 30
+  TIME_SCORE         = 10
+  USER_SCORE         = 75
+  COMMENT_BODY_SCORE = 15
+
   def apply_all
     q_normalized = normalized_query(params[:q])
 
