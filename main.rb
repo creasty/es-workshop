@@ -139,7 +139,20 @@ class IssueSearchService < BaseSearchService
   def apply_title_filter(q)
     return if q.empty?
 
-
+    phrases(q).each do |phrase|
+      {
+        simple_query_string: simple_query_string(
+          query:  phrase,
+          fields: ['s_title']
+        )
+      }.tap do |query|
+        root.disjunctive_queries << query
+        root.func_scores << {
+          filter:       query,
+          boost_factor: TITLE_SCORE,
+        }
+      end
+    end
   end
 
 end
