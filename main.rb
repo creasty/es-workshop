@@ -9,6 +9,8 @@ require_relative 'lib/base_search_service'
 #==============================================================================================
 class UserSearchService < BaseSearchService
 
+  NAME_SCORE = 10
+
   def apply_all
     q_normalized = normalized_query(params[:q])
 
