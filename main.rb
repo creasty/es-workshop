@@ -141,6 +141,7 @@ class IssueSearchService < BaseSearchService
     apply_title_filter(q_normalized)
     apply_body_filter(q_normalized)
     apply_comment_body_filter(q_normalized)
+    apply_user_rank(params[:user_ranks])
     apply_time_rank
   end
 
@@ -227,12 +228,53 @@ class IssueSearchService < BaseSearchService
     end
   end
 
+  def apply_user_rank(user_ranks)
+    return unless user_ranks.is_a?(Hash)
+
+    ranks    = user_ranks.map { |k, v| [k.to_s, v.to_f] }.to_h
+    user_ids = user_ranks.map { |k, _| k.to_i }
+
+    return if user_ids.empty?
+
+    {
+      terms: {
+        i_user_id: user_ids
+      }
+    }.tap do |query|
+      root.disjunctive_queries << query
+
+      root.func_scores << {
+        script_score: {
+          lang: :groovy,
+          params: {
+            ranks:  ranks,
+            weight: USER_SCORE,
+          },
+          script: <<-SCRIPT
+            def id = _source.i_user_id as String
+            weight * (ranks.containsKey(id) ? ranks[id] : 0)
+          SCRIPT
+        },
+        filter: query,
+      }
+    end
+  end
+
 end
 
+
+q = 'haru typo'
+
+user_ss = UserSearchService.new(
+  q: q,
+  fields: ['*'],
+)
+user_ss.perform!
+
 issue_ss = IssueSearchService.new(
-  q:      'vim',
+  q: q,
+  user_ranks: user_ss.ranks,
   fields: ['*'],
 )
 issue_ss.perform!
-# puts JSON.dump(issue_ss.raw_result)
-puts JSON.dump(issue_ss.body)
+puts JSON.dump(issue_ss.raw_result)
