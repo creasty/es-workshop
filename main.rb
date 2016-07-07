@@ -175,6 +175,24 @@ class IssueSearchService < BaseSearchService
     end
   end
 
+  def apply_time_rank
+    root.func_scores << {
+      script_score: {
+        lang: :groovy,
+        params: {
+          weight:       TIME_SCORE,
+          current_time: Time.now.to_i,
+          a_month:      30 * 24 * 60 * 60,
+          point:        10.0,
+          e:            1.6,
+        },
+        script: <<-SCRIPT
+          weight * (point / pow((current_time - _source.i_created_at) / a_month + 2, e))
+        SCRIPT
+      },
+    }
+  end
+
 end
 
 issue_ss = IssueSearchService.new(
