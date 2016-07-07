@@ -194,10 +194,33 @@ class IssueSearchService < BaseSearchService
     }
   end
 
+  def apply_comment_body_filter(q)
+    return if q.empty?
+
+    root.comment.highlight(
+      s_body: {}
+    )
+
+    phrases(q).map do |phrase|
+      {
+        simple_query_string: simple_query_string(
+          query:  quote_query(phrase),
+          fields: ['s_body'],
+        ),
+      }.tap do |query|
+        root.comment.disjunctive_queries << query
+        root.comment.func_scores << {
+          filter:       query,
+          boost_factor: COMMENT_BODY_SCORE,
+        }
+      end
+    end
+  end
+
 end
 
 issue_ss = IssueSearchService.new(
-  q:      'vim templates',
+  q:      'vim',
   fields: ['*'],
 )
 issue_ss.perform!
