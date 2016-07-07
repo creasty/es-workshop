@@ -10,7 +10,9 @@ require_relative 'lib/base_search_service'
 class UserSearchService < BaseSearchService
 
   def apply_all
-    apply_name_filter(params[:q])
+    q_normalized = normalized_query(params[:q])
+
+    apply_name_filter(q_normalized)
   end
 
   def search(body)
@@ -23,7 +25,7 @@ class UserSearchService < BaseSearchService
     root.disjunctive_queries << {
       simple_query_string: {
         query: q,
-        fields: ['s_name_ja']
+        fields: ['s_name_ja', 's_name_ja_phonetic', 's_name_en']
       }
     }
   end
@@ -32,7 +34,7 @@ end
 
 
 user_ss = UserSearchService.new(
-  q: '',
+  q: '田中',
   fields: ['*'],
 )
 user_ss.perform!
