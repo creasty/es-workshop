@@ -10,10 +10,19 @@ require_relative 'lib/base_search_service'
 class UserSearchService < BaseSearchService
 
   def apply_all
+    apply_id_filter
   end
 
   def search(body)
     client.post('user/_search', body).body
+  end
+
+  def apply_id_filter
+    root.filters << {
+      term: {
+        i_user_id: 518808
+      }
+    }
   end
 
 end
