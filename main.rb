@@ -126,6 +126,15 @@ class IssueSearchService < BaseSearchService
   USER_SCORE         = 75
   COMMENT_BODY_SCORE = 15
 
+  def after_initialize
+    root.init_child(
+      type:       :comment,
+      score_mode: :max,
+      inner_hits: {},
+    )
+    root.comment.optional!
+  end
+
   def apply_all
     q_normalized = normalized_query(params[:q])
 
@@ -225,5 +234,5 @@ issue_ss = IssueSearchService.new(
   fields: ['*'],
 )
 issue_ss.perform!
-puts JSON.dump(issue_ss.raw_result)
-# puts JSON.dump(issue_ss.body)
+# puts JSON.dump(issue_ss.raw_result)
+puts JSON.dump(issue_ss.body)
