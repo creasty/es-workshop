@@ -109,10 +109,29 @@ class UserSearchService < BaseSearchService
 end
 
 
-user_ss = UserSearchService.new(
-  q: 'mukai',
+# user_ss = UserSearchService.new(
+#   q: 'mukai',
+#   fields: ['*'],
+# )
+# user_ss.perform!
+# # puts JSON.dump(user_ss.raw_result)
+# puts JSON.dump(user_ss.body)
+
+
+class IssueSearchService < BaseSearchService
+
+  def apply_all
+  end
+
+  def search(body)
+    client.post('issue/_search', body).body
+  end
+
+end
+
+issue_ss = IssueSearchService.new(
   fields: ['*'],
 )
-user_ss.perform!
-puts JSON.dump(user_ss.raw_result)
-# puts JSON.dump(user_ss.body)
+issue_ss.perform!
+puts JSON.dump(issue_ss.raw_result)
+# puts JSON.dump(issue_ss.body)
