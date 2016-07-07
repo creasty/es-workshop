@@ -131,6 +131,7 @@ class IssueSearchService < BaseSearchService
 
     apply_title_filter(q_normalized)
     apply_body_filter(q_normalized)
+    apply_time_rank
   end
 
   def search(body)
