@@ -10,17 +10,20 @@ require_relative 'lib/base_search_service'
 class UserSearchService < BaseSearchService
 
   def apply_all
-    apply_id_filter
+    apply_name_filter(params[:q])
   end
 
   def search(body)
     client.post('user/_search', body).body
   end
 
-  def apply_id_filter
-    root.filters << {
-      term: {
-        i_user_id: 518808
+  def apply_name_filter(q)
+    return if q.empty?
+
+    root.disjunctive_queries << {
+      simple_query_string: {
+        query: q,
+        fields: ['s_name_ja']
       }
     }
   end
@@ -34,3 +37,4 @@ user_ss = UserSearchService.new(
 )
 user_ss.perform!
 puts JSON.dump(user_ss.raw_result)
+# puts JSON.dump(user_ss.body)
